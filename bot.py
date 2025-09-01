@@ -18,6 +18,7 @@ CHECK_EVERY_SEC = int(os.getenv("CHECK_EVERY_SEC", 10))
 CHANNEL_PREFIX = os.getenv("CHANNEL_PREFIX", "⭐ Gift")
 INCLUDE_UPGRADE = os.getenv("INCLUDE_UPGRADE", "false").lower() == "true"
 GIFTSCOUNT = int(os.getenv("GIFTSCOUNT", 10000))
+MAX_PRICE = int(os.getenv("MAX_PRICE", 250))
 
 # def load_known():
 #     if STATE_FILE.exists():
@@ -98,20 +99,23 @@ async def monitor(client):
                 # цикл: покупаем самый дешёвый до тех пор, пока не кончатся Stars
 
                 gid, price, isLimited, isSoldOut = cheepest
-                for _ in range(min(GIFTSCOUNT, starsAmount//price)):
-                    print(f"Пробую купить подарок {gid} за {price}⭐")
-                    try:
-                        channel = await create_channel_for_gift(client, gid, price)
-                        res = await buy_gift(client, channel, gid)
-                        print("✅ Успех:", type(res).__name__)
-                        # print("success")
-                    except RPCError as e:
-                        if "BALANCE_TOO_LOW" in str(e):
-                            print("❌ Недостаточно Stars. Останавливаюсь.")
-                            break
-                        else:
-                            print("❌ Ошибка:", e)
-                    time.sleep(1)
+                if (price <= MAX_PRICE): 
+                    for _ in range(min(GIFTSCOUNT, starsAmount//price)):
+                        print(f"Пробую купить подарок {gid} за {price}⭐")
+                        try:
+                            channel = await create_channel_for_gift(client, gid, price)
+                            res = await buy_gift(client, channel, gid)
+                            print("✅ Успех:", type(res).__name__)
+                            # print("success")
+                        except RPCError as e:
+                            if "BALANCE_TOO_LOW" in str(e):
+                                print("❌ Недостаточно Stars. Останавливаюсь.")
+                                break
+                            else:
+                                print("❌ Ошибка:", e)
+                        time.sleep(1)
+                else:
+                    print('skip')
         except Exception as e:
             print("⚠️ Ошибка цикла:", e)
 
